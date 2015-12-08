@@ -110,15 +110,7 @@ shinyServer(function(input, output) {
             mapping=aes(yintercept = final, label="Average"), 
             geom="hline",
             geom_params=list(colour="red")
-      ) +
-      layer(data=df3(), 
-            mapping=aes(x=as.character(VEHICLE_MANUFACTURER_NAME), y=as.numeric(RATED_HORSEPOWER), label=mean(RATED_HORSEPOWER)), 
-            stat="identity", 
-            stat_params=list(), 
-            geom="text",
-            geom_params=list(colour="black", hjust=0), 
-            position=position_identity()
-      )
+      ) 
     
     plot3
   }) 
@@ -129,7 +121,7 @@ shinyServer(function(input, output) {
   })
   
   output$distPlot4 <- renderPlot({ 
-    plot4<- ggplot(car, aes(x = reorder(VEHICLE_MANUFACTURER_NAME, RATED_HORSEPOWER, FUN=median), y = RATED_HORSEPOWER)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+    plot4<- ggplot(car, aes(x = reorder(VEHICLE_MANUFACTURER_NAME, RATED_HORSEPOWER, FUN=median), y = RATED_HORSEPOWER)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="Vehicle Manufacturer Name", y="Rated Horsepower")
     
     plot4
   }) 
@@ -139,9 +131,31 @@ shinyServer(function(input, output) {
   })
   
   output$distPlot5 <- renderPlot({ 
-    plot4<- ggplot(car, aes(x=RATED_HORSEPOWER)) + geom_histogram(aes(fill = ..count..),binwidth=35.4)
+    plot4<- ggplot(car, aes(x=RATED_HORSEPOWER)) + geom_histogram(aes(fill = ..count..),binwidth=35.4) + labs(x="Rated Horsepower", y="Count")
     
     plot4
   }) 
   
+  
+  df1 <- eventReactive(input$clicks6, { data.frame(fromJSON(getURL(URLencode(gsub("\n", " ", 'skipper.cs.utexas.edu:5001/rest/native/?query="select Rated_Horsepower,Co2_G_MI_,Vehicle_Type from CARS where CO2_G_MI_ is not null and RATED_HORSEPOWER <"p1" ')), httpheader=c(DB='jdbc:oracle:thin:@sayonara.microlab.cs.utexas.edu:1521:orcl', USER='C##cs329e_in2422', PASS='orcl_in2422', MODE='native_mode', MODEL='model', returnDimensions = 'False', returnFor = 'JSON', p1=Rated_Horsepower_value()), verbose = TRUE)))
+  })
+  
+  output$distPlot6 <- renderPlot({ 
+    plot<- ggplot() +
+      coord_cartesian() + 
+      scale_x_continuous() +
+      scale_y_continuous() +
+      labs(title=isolate(input$title)) +
+      labs(x="RATED HORSEPOWER", y="CO2 G/MI", color="VEHICLE TYPE") +
+      layer(data=df1() , 
+            mapping=aes(x=as.numeric(RATED_HORSEPOWER), y=as.numeric(CO2_G_MI_), color = as.character(VEHICLE_TYPE     )), 
+            stat="identity",
+            stat_params=list(), 
+            geom="point",
+            geom_params=list(), 
+            position=position_jitter(width=0.0, height=0)
+      ) 
+    
+    plot
+  }) 
   })
